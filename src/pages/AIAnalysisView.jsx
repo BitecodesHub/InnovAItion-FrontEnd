@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Brain, RefreshCw, AlertTriangle, CheckCircle, Info } from 'lucide-react'
+import { ArrowLeft, Brain, RefreshCw, AlertTriangle, CheckCircle, Info, AlertCircle, TrendingUp, Activity, Shield, FileText } from 'lucide-react'
 import { aiAnalysisAPI } from '../services/api'
 import { formatDateTime } from '../utils/dateUtils'
 
@@ -106,6 +106,449 @@ const FormattedContent = ({ content }) => {
   }
   
   return <div className="formatted-content">{formatContent(content)}</div>
+}
+
+const StructuredReportView = ({ structuredReportJson }) => {
+  const [report, setReport] = useState(null)
+
+  useEffect(() => {
+    if (structuredReportJson) {
+      try {
+        // Clean JSON if it has markdown code blocks
+        let cleanedJson = structuredReportJson.trim()
+        if (cleanedJson.startsWith('```json')) {
+          cleanedJson = cleanedJson.substring(7)
+        }
+        if (cleanedJson.startsWith('```')) {
+          cleanedJson = cleanedJson.substring(3)
+        }
+        if (cleanedJson.endsWith('```')) {
+          cleanedJson = cleanedJson.substring(0, cleanedJson.length - 3)
+        }
+        cleanedJson = cleanedJson.trim()
+        
+        const parsed = JSON.parse(cleanedJson)
+        setReport(parsed)
+      } catch (error) {
+        console.error('Error parsing structured report:', error)
+        setReport(null)
+      }
+    }
+  }, [structuredReportJson])
+
+  if (!report) return null
+
+  const getRiskColor = (riskLevel) => {
+    const risk = riskLevel?.toLowerCase()
+    if (risk === 'high') return '#ef4444'
+    if (risk === 'moderate') return '#f59e0b'
+    return '#10b981'
+  }
+
+  const getRiskBg = (riskLevel) => {
+    const risk = riskLevel?.toLowerCase()
+    if (risk === 'high') return '#fee2e2'
+    if (risk === 'moderate') return '#fef3c7'
+    return '#d1fae5'
+  }
+
+  const getStageColor = (stage) => {
+    const s = stage?.toLowerCase()
+    if (s === 'advanced') return '#ef4444'
+    if (s === 'intermediate') return '#f59e0b'
+    return '#3b82f6'
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* 1. PRIMARY CLINICAL SUMMARY */}
+      <div style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        padding: '1.5rem',
+        borderRadius: '12px',
+        color: 'white',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+          <FileText size={24} />
+          <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '700' }}>
+            Primary Clinical Summary
+          </h3>
+        </div>
+        <p style={{ margin: 0, fontSize: '1rem', lineHeight: '1.7', opacity: 0.95 }}>
+          {report.primaryClinicalSummary}
+        </p>
+      </div>
+
+      {/* 2. PRIMARY CLINICAL IMPRESSION */}
+      <div style={{
+        background: 'white',
+        padding: '1.5rem',
+        borderRadius: '12px',
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+      }}>
+        <h3 style={{ 
+          fontSize: '1.125rem', 
+          fontWeight: '700',
+          color: '#111827',
+          marginBottom: '1rem',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}>
+          <Brain size={20} color="#8b5cf6" />
+          Primary Clinical Impression
+        </h3>
+        <p style={{ margin: 0, color: '#374151', lineHeight: '1.7' }}>
+          {report.primaryClinicalImpression}
+        </p>
+      </div>
+
+      {/* 3. DISEASE STAGE & 4. RISK ASSESSMENT - Side by Side */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+        {/* Disease Stage */}
+        {report.diseaseStage && (
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ 
+              fontSize: '1.125rem', 
+              fontWeight: '700',
+              color: '#111827',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <Activity size={20} color={getStageColor(report.diseaseStage.stage)} />
+              Disease Stage Classification
+            </h3>
+            <div style={{
+              display: 'inline-block',
+              padding: '0.5rem 1rem',
+              background: getStageColor(report.diseaseStage.stage) + '20',
+              color: getStageColor(report.diseaseStage.stage),
+              borderRadius: '6px',
+              fontWeight: '700',
+              marginBottom: '1rem',
+              fontSize: '1rem'
+            }}>
+              {report.diseaseStage.stage}
+            </div>
+            {report.diseaseStage.explanation && (
+              <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.8' }}>
+                {report.diseaseStage.explanation.map((exp, idx) => (
+                  <li key={idx}>{exp}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
+
+        {/* Risk Assessment */}
+        {report.riskAssessment && (
+          <div style={{
+            background: 'white',
+            padding: '1.5rem',
+            borderRadius: '12px',
+            border: '1px solid #e5e7eb',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+          }}>
+            <h3 style={{ 
+              fontSize: '1.125rem', 
+              fontWeight: '700',
+              color: '#111827',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <TrendingUp size={20} color={getRiskColor(report.riskAssessment.overallRiskLevel)} />
+              Risk Assessment
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                  Overall Risk Level
+                </div>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '0.5rem 1rem',
+                  background: getRiskBg(report.riskAssessment.overallRiskLevel),
+                  color: getRiskColor(report.riskAssessment.overallRiskLevel),
+                  borderRadius: '6px',
+                  fontWeight: '700'
+                }}>
+                  {report.riskAssessment.overallRiskLevel}
+                </div>
+              </div>
+              {report.riskAssessment.riskOfProgression !== null && report.riskAssessment.riskOfProgression !== undefined && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Risk of Disease Progression
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#111827' }}>
+                    {report.riskAssessment.riskOfProgression}%
+                  </div>
+                </div>
+              )}
+              {report.riskAssessment.confidenceScore !== null && report.riskAssessment.confidenceScore !== undefined && (
+                <div>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Confidence Score
+                  </div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#10b981' }}>
+                    {report.riskAssessment.confidenceScore}%
+                  </div>
+                </div>
+              )}
+              {report.riskAssessment.riskFactors && (
+                <div style={{ marginTop: '0.5rem', padding: '0.75rem', background: '#f9fafb', borderRadius: '6px' }}>
+                  <div style={{ fontSize: '0.875rem', color: '#6b7280', marginBottom: '0.25rem' }}>
+                    Risk Factors
+                  </div>
+                  <div style={{ fontSize: '0.875rem', color: '#374151', lineHeight: '1.6' }}>
+                    {report.riskAssessment.riskFactors}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 5. KEY INDICATORS */}
+      {report.keyIndicators && report.keyIndicators.length > 0 && (
+        <div style={{
+          background: 'white',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '700',
+            color: '#111827',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Info size={20} color="#3b82f6" />
+            Key Indicators Supporting This Assessment
+          </h3>
+          <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.8' }}>
+            {report.keyIndicators.map((indicator, idx) => (
+              <li key={idx} style={{ marginBottom: '0.5rem' }}>{indicator}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 6. DIFFERENTIAL DIAGNOSIS */}
+      {report.differentialDiagnosis && report.differentialDiagnosis.length > 0 && (
+        <div style={{
+          background: 'white',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '700',
+            color: '#111827',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Brain size={20} color="#8b5cf6" />
+            Differential Diagnosis (Ranked)
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            {report.differentialDiagnosis.map((dd, idx) => (
+              <div key={idx} style={{
+                padding: '1rem',
+                background: '#f9fafb',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <div style={{ fontWeight: '700', color: '#111827', fontSize: '1rem' }}>
+                    {dd.condition}
+                  </div>
+                  <div style={{
+                    padding: '0.25rem 0.75rem',
+                    background: dd.likelihood === 'High' ? '#fee2e2' : dd.likelihood === 'Moderate' ? '#fef3c7' : '#d1fae5',
+                    color: dd.likelihood === 'High' ? '#991b1b' : dd.likelihood === 'Moderate' ? '#92400e' : '#065f46',
+                    borderRadius: '4px',
+                    fontSize: '0.875rem',
+                    fontWeight: '600'
+                  }}>
+                    {dd.likelihood}
+                  </div>
+                </div>
+                <div style={{ fontSize: '0.875rem', color: '#6b7280' }}>
+                  {dd.justification}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 7. ACTIONABLE RECOMMENDATIONS */}
+      {report.recommendations && (
+        <div style={{
+          background: 'white',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '700',
+            color: '#111827',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <CheckCircle size={20} color="#10b981" />
+            Actionable Recommendations
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {report.recommendations.immediateActions && report.recommendations.immediateActions.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>
+                  Immediate Actions
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.8' }}>
+                  {report.recommendations.immediateActions.map((action, idx) => (
+                    <li key={idx}>{action}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {report.recommendations.furtherDiagnosticEvaluation && report.recommendations.furtherDiagnosticEvaluation.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>
+                  Further Diagnostic Evaluation
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.8' }}>
+                  {report.recommendations.furtherDiagnosticEvaluation.map((test, idx) => (
+                    <li key={idx}>{test}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {report.recommendations.monitoringAndFollowUp && report.recommendations.monitoringAndFollowUp.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', marginBottom: '0.75rem' }}>
+                  Monitoring & Follow-Up
+                </h4>
+                <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#374151', lineHeight: '1.8' }}>
+                  {report.recommendations.monitoringAndFollowUp.map((monitor, idx) => (
+                    <li key={idx}>{monitor}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 8. WARNING SIGNS */}
+      {report.warningSigns && report.warningSigns.length > 0 && (
+        <div style={{
+          background: '#fef2f2',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #fecaca',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '700',
+            color: '#991b1b',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <AlertCircle size={20} color="#ef4444" />
+            Warning Signs & Safety Alerts
+          </h3>
+          <ul style={{ margin: 0, paddingLeft: '1.5rem', color: '#7f1d1d', lineHeight: '1.8' }}>
+            {report.warningSigns.map((warning, idx) => (
+              <li key={idx} style={{ marginBottom: '0.5rem' }}>{warning}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 9. UNCERTAINTY & LIMITATIONS */}
+      {report.uncertaintyAndLimitations && (
+        <div style={{
+          background: '#fffbeb',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #fde68a',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <h3 style={{ 
+            fontSize: '1.125rem', 
+            fontWeight: '700',
+            color: '#92400e',
+            marginBottom: '1rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            <Info size={20} color="#f59e0b" />
+            Uncertainty & Limitations
+          </h3>
+          <p style={{ margin: 0, color: '#78350f', lineHeight: '1.7' }}>
+            {report.uncertaintyAndLimitations}
+          </p>
+        </div>
+      )}
+
+      {/* 10. FINAL AI NOTE */}
+      {report.finalAINote && (
+        <div style={{
+          background: '#f0f9ff',
+          padding: '1.5rem',
+          borderRadius: '12px',
+          border: '1px solid #bae6fd',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+            <Shield size={20} color="#3b82f6" />
+            <h3 style={{ 
+              fontSize: '1.125rem', 
+              fontWeight: '700',
+              color: '#1e40af',
+              margin: 0
+            }}>
+              Final AI Note
+            </h3>
+          </div>
+          <p style={{ margin: 0, color: '#1e3a8a', lineHeight: '1.7', fontStyle: 'italic' }}>
+            {report.finalAINote}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 const AIAnalysisView = () => {
@@ -510,7 +953,11 @@ const AIAnalysisView = () => {
             borderRadius: '8px',
             border: '1px solid #e9d5ff'
           }}>
-            <FormattedContent content={analysis.analysisResult} />
+            {analysis.structuredReportJson ? (
+              <StructuredReportView structuredReportJson={analysis.structuredReportJson} />
+            ) : (
+              <FormattedContent content={analysis.analysisResult} />
+            )}
           </div>
         </div>
       )}

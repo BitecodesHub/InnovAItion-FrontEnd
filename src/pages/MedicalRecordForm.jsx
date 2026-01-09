@@ -159,11 +159,29 @@ const MedicalRecordForm = () => {
                 required
               >
                 <option value="">Select Type</option>
-                <option value="Diagnosis">Diagnosis</option>
-                <option value="Lab Report">Lab Report</option>
-                <option value="X-Ray">X-Ray</option>
-                <option value="Prescription">Prescription</option>
-                <option value="Surgery">Surgery</option>
+                <optgroup label="Imaging & Scans">
+                  <option value="MRI">MRI</option>
+                  <option value="X-Ray">X-Ray</option>
+                  <option value="CT Scan">CT Scan</option>
+                  <option value="Ultrasound">Ultrasound</option>
+                </optgroup>
+                <optgroup label="Cardiac Tests">
+                  <option value="ECG">ECG</option>
+                  <option value="Echocardiogram">Echocardiogram</option>
+                  <option value="Stress Test">Stress Test</option>
+                </optgroup>
+                <optgroup label="Lab Reports">
+                  <option value="Blood Report">Blood Report</option>
+                  <option value="Lab Report">Lab Report</option>
+                  <option value="Urine Test">Urine Test</option>
+                  <option value="Biopsy">Biopsy</option>
+                </optgroup>
+                <optgroup label="Clinical Records">
+                  <option value="Diagnosis">Diagnosis</option>
+                  <option value="Prescription">Prescription</option>
+                  <option value="Surgery">Surgery</option>
+                  <option value="Consultation">Consultation</option>
+                </optgroup>
                 <option value="Other">Other</option>
               </select>
             </div>
