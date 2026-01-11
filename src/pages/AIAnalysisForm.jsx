@@ -383,22 +383,31 @@ const AIAnalysisForm = () => {
                           gap: '0.5rem',
                           padding: '0.75rem',
                           cursor: 'pointer',
-                          borderRadius: '6px',
+                          borderRadius: '8px',
                           marginBottom: '0.25rem',
-                          background: isRequired && isSelected
-                            ? '#fee2e2'
-                            : isRecommended && isSelected
-                              ? '#fef3c7'
-                              : isRequired
-                                ? '#fef2f2'
-                                : isRecommended
-                                  ? '#fffbeb'
-                                  : 'transparent',
-                          border: isRequired
-                            ? '1px solid #fecaca'
-                            : isRecommended
-                              ? '1px solid #fde68a'
-                              : '1px solid transparent'
+                          background: isSelected
+                            ? (isRequired
+                              ? '#fee2e2'
+                              : isRecommended
+                                ? '#fef3c7'
+                                : '#dbeafe') // Blue for regular selected items
+                            : (isRequired
+                              ? '#fef2f2'
+                              : isRecommended
+                                ? '#fffbeb'
+                                : 'transparent'),
+                          border: isSelected
+                            ? (isRequired
+                              ? '2px solid #ef4444'
+                              : isRecommended
+                                ? '2px solid #f59e0b'
+                                : '2px solid #3b82f6') // Blue border for selected
+                            : (isRequired
+                              ? '1px solid #fecaca'
+                              : isRecommended
+                                ? '1px solid #fde68a'
+                                : '1px solid #e5e7eb'),
+                          transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) e.currentTarget.style.background = '#f3f4f6'
