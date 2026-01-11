@@ -232,6 +232,13 @@ aiApi.interceptors.request.use(
     if (config.method === 'get') {
       config.params = { ...config.params, _t: Date.now() }
     }
+
+    // For POST requests with FormData, append a timestamp field to force backend to see it as new data
+    // This ensures that re-uploading the same file triggers a fresh analysis
+    if (config.method === 'post' && config.data instanceof FormData) {
+      config.data.append('_t', Date.now().toString())
+    }
+
     return config
   },
   (error) => {

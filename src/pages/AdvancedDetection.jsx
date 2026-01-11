@@ -52,109 +52,109 @@ const DETECTION_TYPES = {
             'JPEG or PNG format preferred'
         ]
     },
-    skinCancer: {
-        id: 'skinCancer',
-        name: 'Skin Cancer Classification',
-        shortName: 'Skin Cancer',
-        icon: Scan,
-        color: '#ff6b6b',
-        gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
-        description: 'Classify skin lesions for potential malignancy using deep learning',
-        fileType: 'image',
-        acceptedFormats: 'image/jpeg, image/png, image/jpg',
-        maxSize: '10MB',
-        diseases: [
-            'Melanoma (MEL)',
-            'Basal Cell Carcinoma (BCC)',
-            'Squamous Cell Carcinoma (SCC)',
-            'Melanocytic Nevus (NV)',
-            'Actinic Keratosis (AKIEC)',
-            'Benign Keratosis (BKL)'
-        ],
-        instructions: [
-            'Take a close-up photo of the skin lesion',
-            'Ensure good lighting without shadows',
-            'Include a ruler or coin for scale if possible',
-            'Capture the entire lesion in frame'
-        ]
-    },
-    skinLesions: {
-        id: 'skinLesions',
-        name: 'Skin Lesions Detection',
-        shortName: 'Skin Lesions',
-        icon: Activity,
-        color: '#00ff88',
-        gradient: 'linear-gradient(135deg, #00ff88, #00cc6a)',
-        description: 'Detect and classify skin lesions using HAM10000 trained model',
-        fileType: 'image',
-        acceptedFormats: 'image/jpeg, image/png, image/jpg',
-        maxSize: '10MB',
-        diseases: [
-            'Actinic keratoses',
-            'Basal cell carcinoma',
-            'Benign keratosis',
-            'Dermatofibroma',
-            'Melanoma',
-            'Melanocytic nevi',
-            'Vascular lesions'
-        ],
-        instructions: [
-            'Photograph the skin lesion directly',
-            'Use natural lighting when possible',
-            'Keep camera steady to avoid blur',
-            'Clean the area before photographing'
-        ]
-    },
-    parkinson: {
-        id: 'parkinson',
-        name: 'Parkinson Speech Detection',
-        shortName: 'Parkinson Speech',
-        icon: Mic,
-        color: '#a78bfa',
-        gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
-        description: 'Analyze speech patterns to detect Parkinson\'s disease indicators',
-        fileType: 'audio',
-        acceptedFormats: 'audio/wav, audio/mp3, audio/ogg, audio/mpeg',
-        maxSize: '25MB',
-        diseases: [
-            'Voice tremor patterns',
-            'Speech rate abnormalities',
-            'Pitch instability',
-            'Vocal jitter/shimmer'
-        ],
-        instructions: [
-            'Record in a quiet environment',
-            'Speak clearly for at least 10 seconds',
-            'Read a passage or count numbers',
-            'WAV format recommended for best accuracy'
-        ]
-    },
-    gastro: {
-        id: 'gastro',
-        name: 'Gastrointestinal Detection',
-        shortName: 'GastroAI',
-        icon: Activity,
-        color: '#f59e0b',
-        gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
-        description: 'Detect gastrointestinal conditions from endoscopy images using AI',
-        fileType: 'image',
-        acceptedFormats: 'image/jpeg, image/png, image/jpg',
-        maxSize: '10MB',
-        diseases: [
-            'Polyps',
-            'Ulcerative Colitis',
-            'Esophagitis',
-            'Dyed Lifted Polyps',
-            'Dyed Resection Margins',
-            'Normal Landmarks'
-        ],
-        instructions: [
-            'Upload endoscopy images only',
-            'Ensure image is clear and focused',
-            'Multiple images can be analyzed',
-            'JPEG or PNG format preferred'
-        ]
-    },
+    // skinCancer: {
+    //     id: 'skinCancer',
+    //     name: 'Skin Cancer Classification',
+    //     shortName: 'Skin Cancer',
+    //     icon: Scan,
+    //     color: '#ff6b6b',
+    //     gradient: 'linear-gradient(135deg, #ff6b6b, #ee5a5a)',
+    //     description: 'Classify skin lesions for potential malignancy using deep learning',
+    //     fileType: 'image',
+    //     acceptedFormats: 'image/jpeg, image/png, image/jpg',
+    //     maxSize: '10MB',
+    //     diseases: [
+    //         'Melanoma (MEL)',
+    //         'Basal Cell Carcinoma (BCC)',
+    //         'Squamous Cell Carcinoma (SCC)',
+    //         'Melanocytic Nevus (NV)',
+    //         'Actinic Keratosis (AKIEC)',
+    //         'Benign Keratosis (BKL)'
+    //     ],
+    //     instructions: [
+    //         'Take a close-up photo of the skin lesion',
+    //         'Ensure good lighting without shadows',
+    //         'Include a ruler or coin for scale if possible',
+    //         'Capture the entire lesion in frame'
+    //     ]
+    // },
+    // skinLesions: {
+    //     id: 'skinLesions',
+    //     name: 'Skin Lesions Detection',
+    //     shortName: 'Skin Lesions',
+    //     icon: Activity,
+    //     color: '#00ff88',
+    //     gradient: 'linear-gradient(135deg, #00ff88, #00cc6a)',
+    //     description: 'Detect and classify skin lesions using HAM10000 trained model',
+    //     fileType: 'image',
+    //     acceptedFormats: 'image/jpeg, image/png, image/jpg',
+    //     maxSize: '10MB',
+    //     diseases: [
+    //         'Actinic keratoses',
+    //         'Basal cell carcinoma',
+    //         'Benign keratosis',
+    //         'Dermatofibroma',
+    //         'Melanoma',
+    //         'Melanocytic nevi',
+    //         'Vascular lesions'
+    //     ],
+    //     instructions: [
+    //         'Photograph the skin lesion directly',
+    //         'Use natural lighting when possible',
+    //         'Keep camera steady to avoid blur',
+    //         'Clean the area before photographing'
+    //     ]
+    // },
+    // parkinson: {
+    //     id: 'parkinson',
+    //     name: 'Parkinson Speech Detection',
+    //     shortName: 'Parkinson Speech',
+    //     icon: Mic,
+    //     color: '#a78bfa',
+    //     gradient: 'linear-gradient(135deg, #a78bfa, #7c3aed)',
+    //     description: 'Analyze speech patterns to detect Parkinson\'s disease indicators',
+    //     fileType: 'audio',
+    //     acceptedFormats: 'audio/wav, audio/mp3, audio/ogg, audio/mpeg',
+    //     maxSize: '25MB',
+    //     diseases: [
+    //         'Voice tremor patterns',
+    //         'Speech rate abnormalities',
+    //         'Pitch instability',
+    //         'Vocal jitter/shimmer'
+    //     ],
+    //     instructions: [
+    //         'Record in a quiet environment',
+    //         'Speak clearly for at least 10 seconds',
+    //         'Read a passage or count numbers',
+    //         'WAV format recommended for best accuracy'
+    //     ]
+    // },
+    // gastro: {
+    //     id: 'gastro',
+    //     name: 'Gastrointestinal Detection',
+    //     shortName: 'GastroAI',
+    //     icon: Activity,
+    //     color: '#f59e0b',
+    //     gradient: 'linear-gradient(135deg, #f59e0b, #d97706)',
+    //     description: 'Detect gastrointestinal conditions from endoscopy images using AI',
+    //     fileType: 'image',
+    //     acceptedFormats: 'image/jpeg, image/png, image/jpg',
+    //     maxSize: '10MB',
+    //     diseases: [
+    //         'Polyps',
+    //         'Ulcerative Colitis',
+    //         'Esophagitis',
+    //         'Dyed Lifted Polyps',
+    //         'Dyed Resection Margins',
+    //         'Normal Landmarks'
+    //     ],
+    //     instructions: [
+    //         'Upload endoscopy images only',
+    //         'Ensure image is clear and focused',
+    //         'Multiple images can be analyzed',
+    //         'JPEG or PNG format preferred'
+    //     ]
+    // },
     lungCancer: {
         id: 'lungCancer',
         name: 'Lung Cancer Detection',
@@ -203,30 +203,30 @@ const DETECTION_TYPES = {
             'All fields are optional but improve accuracy'
         ]
     },
-    retfound: {
-        id: 'retfound',
-        name: 'Retinal Foundation Model',
-        shortName: 'RETFound',
-        icon: Eye,
-        color: '#10b981',
-        gradient: 'linear-gradient(135deg, #10b981, #059669)',
-        description: 'Advanced Diabetic Retinopathy grading using the state-of-the-art RETFound (ViT-Large) model',
-        fileType: 'image',
-        acceptedFormats: 'image/jpeg, image/png, image/tiff',
-        maxSize: '10MB',
-        diseases: [
-            'Mild Diabetic Retinopathy',
-            'Moderate Diabetic Retinopathy',
-            'Severe Diabetic Retinopathy',
-            'Proliferative Diabetic Retinopathy'
-        ],
-        instructions: [
-            'Upload a high-quality fundus image',
-            'Image should be centered on the macula',
-            'Ensure good lighting and focus',
-            'Accepts high-resolution fundus photos'
-        ]
-    }
+    // retfound: {
+    //     id: 'retfound',
+    //     name: 'Retinal Foundation Model',
+    //     shortName: 'RETFound',
+    //     icon: Eye,
+    //     color: '#10b981',
+    //     gradient: 'linear-gradient(135deg, #10b981, #059669)',
+    //     description: 'Advanced Diabetic Retinopathy grading using the state-of-the-art RETFound (ViT-Large) model',
+    //     fileType: 'image',
+    //     acceptedFormats: 'image/jpeg, image/png, image/tiff',
+    //     maxSize: '10MB',
+    //     diseases: [
+    //         'Mild Diabetic Retinopathy',
+    //         'Moderate Diabetic Retinopathy',
+    //         'Severe Diabetic Retinopathy',
+    //         'Proliferative Diabetic Retinopathy'
+    //     ],
+    //     instructions: [
+    //         'Upload a high-quality fundus image',
+    //         'Image should be centered on the macula',
+    //         'Ensure good lighting and focus',
+    //         'Accepts high-resolution fundus photos'
+    //     ]
+    // }
 }
 
 const AdvancedDetection = () => {
