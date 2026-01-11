@@ -1252,7 +1252,13 @@ const HealthStory = () => {
                   whiteSpace: 'pre-wrap',
                   fontSize: '0.9375rem'
                 }}>
-                  {qaAnswer.answer}
+                  {qaAnswer.answer.split('\n').map((paragraph, idx) => (
+                    paragraph.trim() && (
+                      <p key={idx} style={{ marginBottom: '1rem', whiteSpace: 'pre-line' }}>
+                        {paragraph.replace(/^{\s*"answer":\s*"/, '').replace(/"\s*}$/, '').replace(/\\n/g, '\n')}
+                      </p>
+                    )
+                  ))}
                 </div>
               </>
             ) : (
