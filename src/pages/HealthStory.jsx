@@ -1252,13 +1252,88 @@ const HealthStory = () => {
                   whiteSpace: 'pre-wrap',
                   fontSize: '0.9375rem'
                 }}>
-                  {qaAnswer.answer.split('\n').map((paragraph, idx) => (
-                    paragraph.trim() && (
-                      <p key={idx} style={{ marginBottom: '1rem', whiteSpace: 'pre-line' }}>
-                        {paragraph.replace(/^{\s*"answer":\s*"/, '').replace(/"\s*}$/, '').replace(/\\n/g, '\n')}
-                      </p>
-                    )
-                  ))}
+                  {(() => {
+                    // Helper to render sections
+                    const renderSection = (title, content) => (
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <h4 style={{ color: '#059669', marginBottom: '0.5rem', fontWeight: '600' }}>{title}</h4>
+                        <div style={{ color: 'var(--text-primary)' }}>{content}</div>
+                      </div>
+                    );
+
+                    try {
+                      // Attempt to parse JSON response if it looks like JSON
+                      let parsed = null;
+                      const text = qaAnswer.answer.trim();
+                      if (text.startsWith('{') && text.endsWith('}')) {
+                        parsed = JSON.parse(text);
+                      }
+
+                      if (parsed) {
+                        return (
+                          <div style={{ display: 'grid', gap: '1rem' }}>
+                            {parsed.primaryClinicalSummary && renderSection('Clinical Summary', parsed.primaryClinicalSummary)}
+                            {parsed.primaryClinicalImpression && renderSection('Clinical Impression', parsed.primaryClinicalImpression)}
+
+                            {parsed.riskAssessment && (
+                              <div style={{ background: '#fff1f2', padding: '1rem', borderRadius: '8px', border: '1px solid #fecaca' }}>
+                                <h4 style={{ color: '#be123c', margin: '0 0 0.5rem 0' }}>Risk Assessment: {parsed.riskAssessment.overallRiskLevel}</h4>
+                                <p style={{ margin: 0 }}>{parsed.riskAssessment.riskFactors}</p>
+                              </div>
+                            )}
+
+                            {parsed.recommendations && (
+                              <div>
+                                <h4 style={{ color: '#059669', marginBottom: '0.5rem' }}>Recommendations</h4>
+                                <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                                  {parsed.recommendations.immediateActions?.map((action, i) => (
+                                    <li key={i} style={{ marginBottom: '0.25rem' }}>{action}</li>
+                                  ))}
+                                  {parsed.recommendations.furtherDiagnosticEvaluation?.map((action, i) => (
+                                    <li key={i} style={{ marginBottom: '0.25rem' }}>{action}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {parsed.diseaseStage && (
+                              <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', border: '1px solid #dbeafe' }}>
+                                <h4 style={{ color: '#1e40af', margin: '0 0 0.5rem 0' }}>Disease Stage: {parsed.diseaseStage.stage}</h4>
+                                <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
+                                  {parsed.diseaseStage.explanation?.map((point, i) => (
+                                    <li key={i} style={{ marginBottom: '0.25rem' }}>{point}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {parsed.finalAINote && (
+                              <p style={{
+                                marginTop: '1rem',
+                                fontStyle: 'italic',
+                                color: 'var(--text-secondary)',
+                                borderTop: '1px solid var(--border-subtle)',
+                                paddingTop: '1rem'
+                              }}>
+                                🤖 Note: {parsed.finalAINote}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      }
+                    } catch (e) {
+                      // Fallback to plain text rendering if not JSON
+                    }
+
+                    // Fallback: Parse paragraphs and clean simple JSON wrapper if present
+                    return qaAnswer.answer.split('\n').map((paragraph, idx) => (
+                      paragraph.trim() && (
+                        <p key={idx} style={{ marginBottom: '1rem', whiteSpace: 'pre-line' }}>
+                          {paragraph.replace(/^{\s*"answer":\s*"/, '').replace(/"\s*}$/, '').replace(/\\n/g, '\n')}
+                        </p>
+                      )
+                    ));
+                  })()}
                 </div>
               </>
             ) : (
