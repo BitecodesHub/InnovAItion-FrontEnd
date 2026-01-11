@@ -41,7 +41,7 @@ const AIAnalysisForm = () => {
     if (formData.analysisType) {
       const reqs = getAnalysisRequirements(formData.analysisType)
       setRequirements(reqs)
-      
+
       // Auto-select required records if patient and records are available
       if (formData.patientId && medicalRecords.length > 0) {
         const autoSelected = autoSelectRequiredRecords(medicalRecords, reqs)
@@ -66,7 +66,7 @@ const AIAnalysisForm = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.analysisType])
-  
+
   // Auto-select when medical records are loaded
   useEffect(() => {
     if (formData.analysisType && formData.patientId && medicalRecords.length > 0) {
@@ -114,7 +114,7 @@ const AIAnalysisForm = () => {
       ...formData,
       [name]: value,
     })
-    
+
     // Clear validation errors when user changes input
     if (validationErrors[name]) {
       setValidationErrors(prev => {
@@ -124,43 +124,43 @@ const AIAnalysisForm = () => {
       })
     }
   }
-  
+
   // Check if a record is required
   const isRecordRequired = (record) => {
-    return requirements.required.some(req => 
+    return requirements.required.some(req =>
       !req.isManual && recordMatchesRequirement(record, req)
     )
   }
-  
+
   // Check if a record is recommended
   const isRecordRecommended = (record) => {
-    return requirements.recommended.some(req => 
+    return requirements.recommended.some(req =>
       !req.isManual && recordMatchesRequirement(record, req)
     )
   }
-  
+
   // Validate required records and manual inputs
   const validateForm = () => {
     const errors = {}
-    
+
     // Check required records
     const requiredRecordTypes = requirements.required.filter(req => !req.isManual)
     const selectedRecordTypes = formData.medicalRecordIds.map(id => {
       const record = medicalRecords.find(r => r.id === id)
       return record ? record.recordType : null
     })
-    
+
     requiredRecordTypes.forEach(req => {
       const hasMatchingRecord = formData.medicalRecordIds.some(id => {
         const record = medicalRecords.find(r => r.id === id)
         return record && recordMatchesRequirement(record, req)
       })
-      
+
       if (!hasMatchingRecord) {
         errors[`required_${req.type}`] = `${req.type} is required for this analysis type`
       }
     })
-    
+
     // Check manual BP input for Blood Pressure analysis
     if (formData.analysisType === 'Blood Pressure' || formData.analysisType === 'Hypertension') {
       const bpRequired = requirements.required.find(req => req.isManual && req.type === 'Blood Pressure')
@@ -179,34 +179,34 @@ const AIAnalysisForm = () => {
         }
       }
     }
-    
+
     setValidationErrors(errors)
     return Object.keys(errors).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     // Validate form
     if (!validateForm()) {
       alert('Please fix the validation errors before submitting.')
       return
     }
-    
+
     setLoading(true)
     try {
       // Build input data with records and manual inputs
       let combinedInputData = formData.inputData
-      
+
       // Add manual BP input if provided
       if (formData.systolicBP && formData.diastolicBP) {
         combinedInputData = `Blood Pressure: ${formData.systolicBP}/${formData.diastolicBP} mmHg\n\n` + combinedInputData
       }
-      
+
       // If multiple records selected, combine their data
       if (formData.medicalRecordIds.length > 0) {
         const selectedRecords = medicalRecords.filter(r => formData.medicalRecordIds.includes(r.id))
-        const recordsData = selectedRecords.map(r => 
+        const recordsData = selectedRecords.map(r =>
           `[${r.recordType}] ${r.title}\n${r.description || ''}\n${r.diagnosis || ''}\n${r.symptoms || ''}\n${r.treatment || ''}\n${r.notes || ''}`
         ).join('\n\n---\n\n')
         combinedInputData = recordsData + (combinedInputData ? '\n\nAdditional Notes:\n' + combinedInputData : '')
@@ -242,11 +242,11 @@ const AIAnalysisForm = () => {
   return (
     <div>
       <div style={{ marginBottom: '2rem' }}>
-        <Link 
-          to="/ai-analysis" 
-          style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
+        <Link
+          to="/ai-analysis"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
             gap: '0.5rem',
             color: 'var(--text-light)',
             textDecoration: 'none',
@@ -295,7 +295,7 @@ const AIAnalysisForm = () => {
                   </span>
                 )}
               </label>
-              
+
               {/* Requirements Info */}
               {formData.analysisType && requirements.description && (
                 <div style={{
@@ -350,14 +350,15 @@ const AIAnalysisForm = () => {
                   </div>
                 </div>
               )}
-              
-              <div style={{ 
-                maxHeight: '250px', 
-                overflowY: 'auto', 
-                border: '1px solid var(--border)', 
-                borderRadius: '6px',
-                padding: '0.5rem',
-                background: formData.patientId && medicalRecords.length === 0 ? '#f9fafb' : 'white'
+
+              <div style={{
+                maxHeight: '300px',
+                overflowY: 'auto',
+                border: '2px solid var(--border)',
+                borderRadius: '12px',
+                padding: '0.75rem',
+                background: formData.patientId && medicalRecords.length === 0 ? '#f9fafb' : 'var(--bg-card)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
               }}>
                 {!formData.patientId ? (
                   <p style={{ fontSize: '0.875rem', color: 'var(--text-light)', margin: 0, padding: '0.5rem' }}>
@@ -372,7 +373,7 @@ const AIAnalysisForm = () => {
                     const isRequired = isRecordRequired(record)
                     const isRecommended = isRecordRecommended(record)
                     const isSelected = formData.medicalRecordIds.includes(record.id)
-                    
+
                     return (
                       <label
                         key={record.id}
@@ -384,31 +385,31 @@ const AIAnalysisForm = () => {
                           cursor: 'pointer',
                           borderRadius: '6px',
                           marginBottom: '0.25rem',
-                          background: isRequired && isSelected 
-                            ? '#fee2e2' 
+                          background: isRequired && isSelected
+                            ? '#fee2e2'
                             : isRecommended && isSelected
-                            ? '#fef3c7'
-                            : isRequired
-                            ? '#fef2f2'
+                              ? '#fef3c7'
+                              : isRequired
+                                ? '#fef2f2'
+                                : isRecommended
+                                  ? '#fffbeb'
+                                  : 'transparent',
+                          border: isRequired
+                            ? '1px solid #fecaca'
                             : isRecommended
-                            ? '#fffbeb'
-                            : 'transparent',
-                          border: isRequired 
-                            ? '1px solid #fecaca' 
-                            : isRecommended
-                            ? '1px solid #fde68a'
-                            : '1px solid transparent'
+                              ? '1px solid #fde68a'
+                              : '1px solid transparent'
                         }}
                         onMouseEnter={(e) => {
                           if (!isSelected) e.currentTarget.style.background = '#f3f4f6'
                         }}
                         onMouseLeave={(e) => {
                           if (!isSelected) {
-                            e.currentTarget.style.background = isRequired 
-                              ? '#fef2f2' 
+                            e.currentTarget.style.background = isRequired
+                              ? '#fef2f2'
                               : isRecommended
-                              ? '#fffbeb'
-                              : 'transparent'
+                                ? '#fffbeb'
+                                : 'transparent'
                           }
                         }}
                       >
@@ -468,7 +469,7 @@ const AIAnalysisForm = () => {
                   })
                 )}
               </div>
-              
+
               {/* Validation Errors */}
               {Object.keys(validationErrors).some(key => key.startsWith('required_')) && (
                 <div style={{ marginTop: '0.5rem' }}>
@@ -489,7 +490,7 @@ const AIAnalysisForm = () => {
                     ))}
                 </div>
               )}
-              
+
               {formData.medicalRecordIds.length > 0 && (
                 <p style={{ fontSize: '0.75rem', color: '#10b981', marginTop: '0.5rem' }}>
                   {formData.medicalRecordIds.length} record(s) selected
@@ -611,35 +612,24 @@ const AIAnalysisForm = () => {
               </p>
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Model Version</label>
-              <input
-                type="text"
-                name="modelVersion"
-                value={formData.modelVersion}
-                onChange={handleChange}
-                className="form-input"
-                placeholder="v1.0"
-              />
-            </div>
           </div>
         </div>
 
-        <div style={{ 
-          marginTop: '2rem', 
-          padding: '1rem', 
-          background: 'var(--bg)', 
+        <div style={{
+          marginTop: '2rem',
+          padding: '1rem',
+          background: 'var(--bg)',
           borderRadius: '0.5rem',
           border: '1px solid var(--border)'
         }}>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-light)' }}>
-            <strong>Note:</strong> This analysis will use Google Gemini AI to process the medical information. 
+            <strong>Note:</strong> This analysis will use Google Gemini AI to process the medical information.
             The results are for informational purposes only and should not replace professional medical consultation.
           </p>
         </div>
 
         <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Link 
+          <Link
             to={`/voice-consultation?patientId=${formData.patientId}&symptoms=${encodeURIComponent(formData.inputData)}`}
             className="btn btn-outline"
             style={{
@@ -660,7 +650,7 @@ const AIAnalysisForm = () => {
             <Mic size={18} />
             Start Voice Consultation
           </Link>
-          
+
           <div style={{ display: 'flex', gap: '1rem' }}>
             <Link to="/ai-analysis" className="btn btn-outline">
               Cancel
