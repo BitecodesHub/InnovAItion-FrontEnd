@@ -177,9 +177,39 @@ const PopulationIntelligence = () => {
         <h1 style={{ fontSize: '1.75rem', fontWeight: '800', color: '#f8fafc', marginBottom: '0.5rem' }}>
           Population Health Intelligence
         </h1>
-        <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>
+        <p style={{ color: '#94a3b8', fontSize: '0.95rem', marginBottom: '1.5rem' }}>
           Comprehensive analytics across {totalPatients} patients in your healthcare system
         </p>
+
+        {/* Outbreak Detection Button */}
+        <Link
+          to="/outbreak-detection"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            padding: '0.875rem 1.5rem',
+            background: 'linear-gradient(135deg, #ef4444, #f97316)',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '12px',
+            fontWeight: '600',
+            fontSize: '0.95rem',
+            boxShadow: '0 4px 16px rgba(239, 68, 68, 0.4)',
+            transition: 'transform 0.2s, box-shadow 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-2px)'
+            e.currentTarget.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.5)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = '0 4px 16px rgba(239, 68, 68, 0.4)'
+          }}
+        >
+          <TrendingUp size={20} />
+          🗺️ View Outbreak Detection Map
+        </Link>
       </div>
 
       {/* Summary Cards */}

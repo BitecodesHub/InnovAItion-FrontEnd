@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { 
-  ArrowLeft, 
-  Calendar, 
-  Activity, 
-  TrendingUp, 
-  Brain, 
-  Clock, 
+import {
+  ArrowLeft,
+  Calendar,
+  Activity,
+  TrendingUp,
+  Brain,
+  Clock,
   BookOpen,
   Search,
   Filter,
@@ -24,7 +24,10 @@ import {
   User,
   MapPin,
   Mail,
-  Phone
+  Phone,
+  MessageCircle,
+  Send,
+  Loader2
 } from 'lucide-react'
 import { healthStoryAPI, patientsAPI } from '../services/api'
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
@@ -39,6 +42,12 @@ const HealthStory = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [viewMode, setViewMode] = useState('timeline') // timeline, chart, narrative
+
+  // Q&A State
+  const [qaQuestion, setQaQuestion] = useState('')
+  const [qaAnswer, setQaAnswer] = useState(null)
+  const [qaLoading, setQaLoading] = useState(false)
+  const [qaHistory, setQaHistory] = useState([])
 
   useEffect(() => {
     fetchData()
@@ -61,20 +70,48 @@ const HealthStory = () => {
     }
   }
 
+  // Handle Q&A submission
+  const handleAskQuestion = async (e) => {
+    e.preventDefault()
+    if (!qaQuestion.trim() || qaLoading) return
+
+    const question = qaQuestion.trim()
+    setQaLoading(true)
+    setQaAnswer(null)
+
+    try {
+      const response = await healthStoryAPI.askQuestion(parseInt(patientId), question)
+      const result = response.data
+
+      if (result.success) {
+        setQaAnswer(result)
+        setQaHistory(prev => [...prev, { question, answer: result.answer, timestamp: new Date() }])
+      } else {
+        setQaAnswer({ success: false, error: result.error || 'Failed to get answer' })
+      }
+    } catch (error) {
+      console.error('Error asking question:', error)
+      setQaAnswer({ success: false, error: 'Failed to connect to AI service' })
+    } finally {
+      setQaLoading(false)
+      setQaQuestion('')
+    }
+  }
+
   // Filter and search timeline events
   const filteredTimeline = useMemo(() => {
     if (!healthStory?.timeline) return []
-    
+
     return healthStory.timeline.filter(event => {
-      const matchesSearch = !searchQuery || 
+      const matchesSearch = !searchQuery ||
         event.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         event.diagnosis?.toLowerCase().includes(searchQuery.toLowerCase())
-      
-      const matchesFilter = filterType === 'all' || 
+
+      const matchesFilter = filterType === 'all' ||
         (filterType === 'medical' && event.type === 'medical_record') ||
         (filterType === 'ai' && event.type === 'ai_analysis')
-      
+
       return matchesSearch && matchesFilter
     })
   }, [healthStory?.timeline, searchQuery, filterType])
@@ -82,7 +119,7 @@ const HealthStory = () => {
   // Prepare chart data
   const chartData = useMemo(() => {
     if (!healthStory?.timeline) return []
-    
+
     const monthlyData = {}
     healthStory.timeline.forEach(event => {
       const date = new Date(event.date)
@@ -96,20 +133,20 @@ const HealthStory = () => {
         monthlyData[monthKey].ai++
       }
     })
-    
+
     return Object.values(monthlyData).sort((a, b) => a.month.localeCompare(b.month))
   }, [healthStory?.timeline])
 
   // Risk distribution data
   const riskDistribution = useMemo(() => {
     if (!healthStory?.timeline) return []
-    
+
     const risks = { HIGH: 0, MODERATE: 0, LOW: 0, UNKNOWN: 0 }
     healthStory.timeline.forEach(event => {
       const risk = event.riskLevel || 'UNKNOWN'
       risks[risk] = (risks[risk] || 0) + 1
     })
-    
+
     return Object.entries(risks)
       .filter(([_, count]) => count > 0)
       .map(([name, value]) => ({ name, value }))
@@ -118,20 +155,20 @@ const HealthStory = () => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Unknown date'
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
     })
   }
 
   const formatDateShort = (dateString) => {
     if (!dateString) return 'Unknown'
     const date = new Date(dateString)
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
     })
   }
 
@@ -161,10 +198,10 @@ const HealthStory = () => {
 
   if (loading) {
     return (
-      <div style={{ 
-        display: 'flex', 
+      <div style={{
+        display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center', 
+        alignItems: 'center',
         justifyContent: 'center',
         minHeight: '60vh',
         gap: '1rem'
@@ -180,11 +217,11 @@ const HealthStory = () => {
   if (error || !healthStory) {
     return (
       <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
-        <Link 
-          to={`/patients/${patientId}`} 
-          style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
+        <Link
+          to={`/patients/${patientId}`}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
             gap: '0.5rem',
             color: 'var(--text-secondary)',
             textDecoration: 'none',
@@ -197,8 +234,8 @@ const HealthStory = () => {
           <ArrowLeft size={18} />
           Back to Patient
         </Link>
-        <div className="card" style={{ 
-          textAlign: 'center', 
+        <div className="card" style={{
+          textAlign: 'center',
           padding: '3rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)'
@@ -229,11 +266,11 @@ const HealthStory = () => {
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem' }}>
       {/* Back Button */}
-      <Link 
-        to={`/patients/${patientId}`} 
-        style={{ 
-          display: 'inline-flex', 
-          alignItems: 'center', 
+      <Link
+        to={`/patients/${patientId}`}
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
           gap: '0.5rem',
           color: 'var(--text-secondary)',
           textDecoration: 'none',
@@ -268,7 +305,7 @@ const HealthStory = () => {
           background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
           animation: 'pulse 3s ease-in-out infinite'
         }} />
-        
+
         <div style={{ position: 'relative', zIndex: 1, textAlign: 'center', color: 'white' }}>
           <div style={{
             display: 'inline-flex',
@@ -283,17 +320,17 @@ const HealthStory = () => {
           }}>
             <BookOpen size={40} color="white" />
           </div>
-          <h1 style={{ 
-            margin: 0, 
-            fontSize: '2.5rem', 
+          <h1 style={{
+            margin: 0,
+            fontSize: '2.5rem',
             fontWeight: '800',
             marginBottom: '0.5rem'
           }}>
             Health Story
           </h1>
-          <p style={{ 
-            margin: 0, 
-            opacity: 0.95, 
+          <p style={{
+            margin: 0,
+            opacity: 0.95,
             fontSize: '1.125rem',
             display: 'flex',
             alignItems: 'center',
@@ -316,28 +353,28 @@ const HealthStory = () => {
       </div>
 
       {/* Summary Cards */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
         gap: '1.5rem',
         marginBottom: '2rem'
       }}>
-        <div className="card" style={{ 
-          textAlign: 'center', 
+        <div className="card" style={{
+          textAlign: 'center',
           padding: '1.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px',
           transition: 'transform 0.2s, box-shadow 0.2s'
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)'
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(59, 130, 246, 0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         >
           <div style={{
             display: 'inline-flex',
@@ -359,22 +396,22 @@ const HealthStory = () => {
           </div>
         </div>
 
-        <div className="card" style={{ 
-          textAlign: 'center', 
+        <div className="card" style={{
+          textAlign: 'center',
           padding: '1.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px',
           transition: 'transform 0.2s, box-shadow 0.2s'
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)'
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(16, 185, 129, 0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         >
           <div style={{
             display: 'inline-flex',
@@ -396,22 +433,22 @@ const HealthStory = () => {
           </div>
         </div>
 
-        <div className="card" style={{ 
-          textAlign: 'center', 
+        <div className="card" style={{
+          textAlign: 'center',
           padding: '1.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px',
           transition: 'transform 0.2s, box-shadow 0.2s'
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)'
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(139, 92, 246, 0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         >
           <div style={{
             display: 'inline-flex',
@@ -433,22 +470,22 @@ const HealthStory = () => {
           </div>
         </div>
 
-        <div className="card" style={{ 
-          textAlign: 'center', 
+        <div className="card" style={{
+          textAlign: 'center',
           padding: '1.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px',
           transition: 'transform 0.2s, box-shadow 0.2s'
         }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = 'translateY(-4px)'
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.2)'
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = 'translateY(0)'
-          e.currentTarget.style.boxShadow = 'none'
-        }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)'
+            e.currentTarget.style.boxShadow = '0 8px 24px rgba(239, 68, 68, 0.2)'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)'
+            e.currentTarget.style.boxShadow = 'none'
+          }}
         >
           <div style={{
             display: 'inline-flex',
@@ -502,8 +539,8 @@ const HealthStory = () => {
               fontWeight: '600',
               fontSize: '0.875rem',
               transition: 'all 0.2s',
-              background: viewMode === tab.id 
-                ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+              background: viewMode === tab.id
+                ? 'linear-gradient(135deg, #667eea, #764ba2)'
                 : 'transparent',
               color: viewMode === tab.id ? 'white' : 'var(--text-secondary)'
             }}
@@ -525,8 +562,8 @@ const HealthStory = () => {
             flexWrap: 'wrap'
           }}>
             <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
-              <Search 
-                size={20} 
+              <Search
+                size={20}
                 style={{
                   position: 'absolute',
                   left: '1rem',
@@ -568,8 +605,8 @@ const HealthStory = () => {
                     fontWeight: '600',
                     fontSize: '0.875rem',
                     transition: 'all 0.2s',
-                    background: filterType === type 
-                      ? 'linear-gradient(135deg, #667eea, #764ba2)' 
+                    background: filterType === type
+                      ? 'linear-gradient(135deg, #667eea, #764ba2)'
                       : 'var(--bg-card)',
                     color: filterType === type ? 'white' : 'var(--text-secondary)',
                     border: `1px solid ${filterType === type ? 'transparent' : 'var(--border-subtle)'}`
@@ -582,21 +619,21 @@ const HealthStory = () => {
           </div>
 
           {/* Timeline */}
-          <div className="card" style={{ 
+          <div className="card" style={{
             padding: '2rem',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '16px'
           }}>
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '1.5rem' 
+              marginBottom: '1.5rem'
             }}>
-              <h2 style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              <h2 style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: '0.75rem',
                 margin: 0,
                 fontSize: '1.5rem',
@@ -605,18 +642,18 @@ const HealthStory = () => {
                 <Clock size={24} color="#667eea" />
                 Health Timeline
               </h2>
-              <div style={{ 
-                fontSize: '0.875rem', 
+              <div style={{
+                fontSize: '0.875rem',
                 color: 'var(--text-secondary)',
                 fontWeight: '500'
               }}>
                 {filteredTimeline.length} {filteredTimeline.length === 1 ? 'event' : 'events'}
               </div>
             </div>
-            
+
             {filteredTimeline.length === 0 ? (
-              <div style={{ 
-                textAlign: 'center', 
+              <div style={{
+                textAlign: 'center',
                 padding: '3rem',
                 color: 'var(--text-secondary)'
               }}>
@@ -643,9 +680,9 @@ const HealthStory = () => {
                   const riskLevel = event.riskLevel || 'UNKNOWN'
                   const eventColor = getEventColor(event.type, riskLevel)
                   const isSelected = selectedEvent === index
-                  
+
                   return (
-                    <div 
+                    <div
                       key={index}
                       style={{
                         position: 'relative',
@@ -669,25 +706,25 @@ const HealthStory = () => {
                         zIndex: 2,
                         transition: 'transform 0.2s',
                       }}
-                      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
-                      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.2)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                       />
 
                       {/* Event card */}
-                      <div 
+                      <div
                         className="card"
                         style={{
                           padding: '1.5rem',
                           borderLeft: `4px solid ${eventColor}`,
                           cursor: 'pointer',
                           transition: 'all 0.3s',
-                          background: isSelected 
-                            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))' 
+                          background: isSelected
+                            ? 'linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05))'
                             : 'var(--bg-card)',
                           border: `1px solid ${isSelected ? eventColor + '40' : 'var(--border-subtle)'}`,
                           borderRadius: '12px',
-                          boxShadow: isSelected 
-                            ? `0 8px 24px ${eventColor}20` 
+                          boxShadow: isSelected
+                            ? `0 8px 24px ${eventColor}20`
                             : '0 2px 8px rgba(0,0,0,0.05)',
                           transform: isSelected ? 'translateX(4px)' : 'translateX(0)'
                         }}
@@ -706,19 +743,19 @@ const HealthStory = () => {
                           }}>
                             {getEventIcon(event.type)}
                           </div>
-                          
+
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ 
-                              display: 'flex', 
+                            <div style={{
+                              display: 'flex',
                               alignItems: 'flex-start',
                               justifyContent: 'space-between',
                               marginBottom: '0.5rem',
                               gap: '1rem',
                               flexWrap: 'wrap'
                             }}>
-                              <h3 style={{ 
-                                margin: 0, 
-                                fontSize: '1.125rem', 
+                              <h3 style={{
+                                margin: 0,
+                                fontSize: '1.125rem',
                                 fontWeight: '700',
                                 color: 'var(--text-primary)'
                               }}>
@@ -738,10 +775,10 @@ const HealthStory = () => {
                                 </span>
                               )}
                             </div>
-                            
-                            <div style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
+
+                            <div style={{
+                              display: 'flex',
+                              alignItems: 'center',
                               gap: '0.75rem',
                               color: 'var(--text-secondary)',
                               fontSize: '0.875rem',
@@ -755,7 +792,7 @@ const HealthStory = () => {
                               {event.recordType && (
                                 <>
                                   <span>•</span>
-                                  <span style={{ 
+                                  <span style={{
                                     padding: '0.25rem 0.5rem',
                                     background: 'var(--bg)',
                                     borderRadius: '6px',
@@ -776,16 +813,16 @@ const HealthStory = () => {
                             </div>
 
                             {isSelected && (
-                              <div style={{ 
-                                marginTop: '1rem', 
+                              <div style={{
+                                marginTop: '1rem',
                                 paddingTop: '1rem',
                                 borderTop: `1px solid ${eventColor}30`,
                                 animation: 'fadeIn 0.3s ease'
                               }}>
                                 {event.description && (
                                   <div style={{ marginBottom: '1rem' }}>
-                                    <div style={{ 
-                                      fontWeight: '700', 
+                                    <div style={{
+                                      fontWeight: '700',
                                       marginBottom: '0.5rem',
                                       color: 'var(--text-primary)',
                                       display: 'flex',
@@ -795,8 +832,8 @@ const HealthStory = () => {
                                       <FileText size={16} />
                                       Description
                                     </div>
-                                    <p style={{ 
-                                      margin: 0, 
+                                    <p style={{
+                                      margin: 0,
                                       color: 'var(--text-secondary)',
                                       lineHeight: '1.6'
                                     }}>
@@ -806,8 +843,8 @@ const HealthStory = () => {
                                 )}
                                 {event.diagnosis && (
                                   <div style={{ marginBottom: '1rem' }}>
-                                    <div style={{ 
-                                      fontWeight: '700', 
+                                    <div style={{
+                                      fontWeight: '700',
                                       marginBottom: '0.5rem',
                                       color: 'var(--text-primary)',
                                       display: 'flex',
@@ -817,8 +854,8 @@ const HealthStory = () => {
                                       <Stethoscope size={16} />
                                       Diagnosis
                                     </div>
-                                    <p style={{ 
-                                      margin: 0, 
+                                    <p style={{
+                                      margin: 0,
                                       color: 'var(--text-secondary)',
                                       lineHeight: '1.6'
                                     }}>
@@ -828,8 +865,8 @@ const HealthStory = () => {
                                 )}
                                 {event.symptoms && (
                                   <div>
-                                    <div style={{ 
-                                      fontWeight: '700', 
+                                    <div style={{
+                                      fontWeight: '700',
                                       marginBottom: '0.5rem',
                                       color: 'var(--text-primary)',
                                       display: 'flex',
@@ -839,8 +876,8 @@ const HealthStory = () => {
                                       <Activity size={16} />
                                       Symptoms
                                     </div>
-                                    <p style={{ 
-                                      margin: 0, 
+                                    <p style={{
+                                      margin: 0,
                                       color: 'var(--text-secondary)',
                                       lineHeight: '1.6'
                                     }}>
@@ -866,15 +903,15 @@ const HealthStory = () => {
       {viewMode === 'chart' && (
         <div style={{ display: 'grid', gap: '2rem' }}>
           {/* Event Trends */}
-          <div className="card" style={{ 
+          <div className="card" style={{
             padding: '2rem',
             background: 'var(--bg-card)',
             border: '1px solid var(--border-subtle)',
             borderRadius: '16px'
           }}>
-            <h2 style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+            <h2 style={{
+              display: 'flex',
+              alignItems: 'center',
               gap: '0.75rem',
               marginBottom: '1.5rem',
               fontSize: '1.5rem',
@@ -887,17 +924,17 @@ const HealthStory = () => {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorMedical" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="colorAI" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis 
-                  dataKey="month" 
+                <XAxis
+                  dataKey="month"
                   stroke="#6b7280"
                   tickFormatter={(value) => {
                     const [year, month] = value.split('-')
@@ -905,28 +942,28 @@ const HealthStory = () => {
                   }}
                 />
                 <YAxis stroke="#6b7280" />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '8px', 
+                <Tooltip
+                  contentStyle={{
+                    borderRadius: '8px',
                     border: '1px solid #e5e7eb',
                     background: 'white'
                   }}
                 />
                 <Legend />
-                <Area 
-                  type="monotone" 
-                  dataKey="medical" 
+                <Area
+                  type="monotone"
+                  dataKey="medical"
                   stackId="1"
-                  stroke="#3b82f6" 
+                  stroke="#3b82f6"
                   fillOpacity={1}
                   fill="url(#colorMedical)"
                   name="Medical Records"
                 />
-                <Area 
-                  type="monotone" 
-                  dataKey="ai" 
+                <Area
+                  type="monotone"
+                  dataKey="ai"
                   stackId="1"
-                  stroke="#8b5cf6" 
+                  stroke="#8b5cf6"
                   fillOpacity={1}
                   fill="url(#colorAI)"
                   name="AI Analyses"
@@ -937,15 +974,15 @@ const HealthStory = () => {
 
           {/* Risk Distribution */}
           {riskDistribution.length > 0 && (
-            <div className="card" style={{ 
+            <div className="card" style={{
               padding: '2rem',
               background: 'var(--bg-card)',
               border: '1px solid var(--border-subtle)',
               borderRadius: '16px'
             }}>
-              <h2 style={{ 
-                display: 'flex', 
-                alignItems: 'center', 
+              <h2 style={{
+                display: 'flex',
+                alignItems: 'center',
                 gap: '0.75rem',
                 marginBottom: '1.5rem',
                 fontSize: '1.5rem',
@@ -956,9 +993,9 @@ const HealthStory = () => {
               </h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '8px', 
+                  <Tooltip
+                    contentStyle={{
+                      borderRadius: '8px',
                       border: '1px solid #e5e7eb',
                       background: 'white'
                     }}
@@ -987,16 +1024,16 @@ const HealthStory = () => {
 
       {/* Narrative View */}
       {viewMode === 'narrative' && healthStory.narrative && (
-        <div className="card" style={{ 
-          marginBottom: '2rem', 
+        <div className="card" style={{
+          marginBottom: '2rem',
           padding: '2.5rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px'
         }}>
-          <div style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
             gap: '0.75rem',
             marginBottom: '1.5rem'
           }}>
@@ -1011,7 +1048,7 @@ const HealthStory = () => {
             }}>
               <BookOpen size={24} color="white" />
             </div>
-            <h2 style={{ 
+            <h2 style={{
               margin: 0,
               fontSize: '1.5rem',
               fontWeight: '700'
@@ -1019,8 +1056,8 @@ const HealthStory = () => {
               Health Narrative
             </h2>
           </div>
-          <div style={{ 
-            lineHeight: '1.8', 
+          <div style={{
+            lineHeight: '1.8',
             color: 'var(--text-primary)',
             whiteSpace: 'pre-wrap',
             fontSize: '1.0625rem',
@@ -1034,19 +1071,258 @@ const HealthStory = () => {
         </div>
       )}
 
+      {/* Ask AI - RAG Q&A Section */}
+      <div className="card" style={{
+        marginTop: '2rem',
+        marginBottom: '2rem',
+        padding: '2rem',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: '16px'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.75rem',
+          marginBottom: '1.5rem'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '48px',
+            height: '48px',
+            background: 'linear-gradient(135deg, #06b6d4, #0891b2)',
+            borderRadius: '12px'
+          }}>
+            <MessageCircle size={24} color="white" />
+          </div>
+          <div>
+            <h2 style={{
+              margin: 0,
+              fontSize: '1.5rem',
+              fontWeight: '700'
+            }}>
+              Ask AI About This Patient
+            </h2>
+            <p style={{
+              margin: '0.25rem 0 0 0',
+              fontSize: '0.875rem',
+              color: 'var(--text-secondary)'
+            }}>
+              Ask questions about the patient's health history, records, and AI analyses
+            </p>
+          </div>
+        </div>
+
+        {/* Question Input Form */}
+        <form onSubmit={handleAskQuestion} style={{ marginBottom: '1.5rem' }}>
+          <div style={{
+            display: 'flex',
+            gap: '0.75rem',
+            alignItems: 'stretch'
+          }}>
+            <input
+              type="text"
+              value={qaQuestion}
+              onChange={(e) => setQaQuestion(e.target.value)}
+              placeholder="e.g., What are the patient's main health concerns? Any allergies I should know about?"
+              disabled={qaLoading}
+              style={{
+                flex: 1,
+                padding: '1rem 1.25rem',
+                background: 'var(--bg)',
+                border: '2px solid var(--border-subtle)',
+                borderRadius: '12px',
+                color: 'var(--text-primary)',
+                fontSize: '0.9375rem',
+                outline: 'none',
+                transition: 'border-color 0.2s, box-shadow 0.2s'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#06b6d4'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(6, 182, 212, 0.1)'
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = 'var(--border-subtle)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            />
+            <button
+              type="submit"
+              disabled={qaLoading || !qaQuestion.trim()}
+              style={{
+                padding: '1rem 1.5rem',
+                background: qaLoading || !qaQuestion.trim()
+                  ? 'var(--text-secondary)'
+                  : 'linear-gradient(135deg, #06b6d4, #0891b2)',
+                border: 'none',
+                borderRadius: '12px',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '0.9375rem',
+                cursor: qaLoading || !qaQuestion.trim() ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                transition: 'transform 0.2s, box-shadow 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                if (!qaLoading && qaQuestion.trim()) {
+                  e.currentTarget.style.transform = 'translateY(-2px)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(6, 182, 212, 0.3)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            >
+              {qaLoading ? (
+                <>
+                  <Loader2 size={18} className="animate-spin" style={{ animation: 'spin 1s linear infinite' }} />
+                  Thinking...
+                </>
+              ) : (
+                <>
+                  <Send size={18} />
+                  Ask
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Loading State */}
+        {qaLoading && (
+          <div style={{
+            padding: '2rem',
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(8, 145, 178, 0.05))',
+            borderRadius: '12px',
+            textAlign: 'center',
+            border: '1px solid rgba(6, 182, 212, 0.2)'
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              color: '#0891b2'
+            }}>
+              <Brain size={24} style={{ animation: 'pulse 1.5s ease-in-out infinite' }} />
+              <span style={{ fontWeight: '600' }}>Analyzing patient data and generating response...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Answer Display */}
+        {qaAnswer && !qaLoading && (
+          <div style={{
+            padding: '1.5rem',
+            background: qaAnswer.success
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05))'
+              : 'linear-gradient(135deg, rgba(239, 68, 68, 0.05), rgba(220, 38, 38, 0.05))',
+            borderRadius: '12px',
+            border: `1px solid ${qaAnswer.success ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}`,
+            marginBottom: qaHistory.length > 0 ? '1.5rem' : 0
+          }}>
+            {qaAnswer.success ? (
+              <>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '1rem',
+                  color: '#059669'
+                }}>
+                  <Brain size={20} />
+                  <span style={{ fontWeight: '700' }}>AI Response</span>
+                  {qaAnswer.responseTimeMs && (
+                    <span style={{
+                      fontSize: '0.75rem',
+                      color: 'var(--text-secondary)',
+                      marginLeft: 'auto'
+                    }}>
+                      {qaAnswer.responseTimeMs}ms • {qaAnswer.sourcesUsed?.medicalRecords || 0} records • {qaAnswer.sourcesUsed?.aiAnalyses || 0} analyses
+                    </span>
+                  )}
+                </div>
+                <div style={{
+                  lineHeight: '1.7',
+                  color: 'var(--text-primary)',
+                  whiteSpace: 'pre-wrap',
+                  fontSize: '0.9375rem'
+                }}>
+                  {qaAnswer.answer}
+                </div>
+              </>
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.75rem',
+                color: '#dc2626'
+              }}>
+                <AlertTriangle size={20} />
+                <span>{qaAnswer.error}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Previous Questions */}
+        {qaHistory.length > 0 && !qaLoading && (
+          <div>
+            <div style={{
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: 'var(--text-secondary)',
+              marginBottom: '0.75rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}>
+              <Clock size={14} />
+              Previous Questions ({qaHistory.length})
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+              {qaHistory.slice(-3).reverse().map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    padding: '0.75rem 1rem',
+                    background: 'var(--bg)',
+                    borderRadius: '8px',
+                    fontSize: '0.875rem',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onClick={() => setQaQuestion(item.question)}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-card)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'var(--bg)'}
+                >
+                  <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>Q: </span>
+                  {item.question}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Key Events */}
       {healthStory.keyEvents && healthStory.keyEvents.length > 0 && (
-        <div className="card" style={{ 
-          marginTop: '2rem', 
+        <div className="card" style={{
+          marginTop: '2rem',
           padding: '2rem',
           background: 'var(--bg-card)',
           border: '1px solid var(--border-subtle)',
           borderRadius: '16px'
         }}>
-          <h2 style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '0.75rem', 
+          <h2 style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
             marginBottom: '1.5rem',
             fontSize: '1.5rem',
             fontWeight: '700'
@@ -1056,7 +1332,7 @@ const HealthStory = () => {
           </h2>
           <div style={{ display: 'grid', gap: '1rem' }}>
             {healthStory.keyEvents.map((event, index) => (
-              <div 
+              <div
                 key={index}
                 style={{
                   padding: '1.25rem',
@@ -1074,16 +1350,16 @@ const HealthStory = () => {
                   e.currentTarget.style.boxShadow = 'none'
                 }}
               >
-                <div style={{ 
-                  fontWeight: '700', 
+                <div style={{
+                  fontWeight: '700',
                   marginBottom: '0.5rem',
                   color: 'var(--text-primary)',
                   fontSize: '1.0625rem'
                 }}>
                   {event.title}
                 </div>
-                <div style={{ 
-                  fontSize: '0.875rem', 
+                <div style={{
+                  fontSize: '0.875rem',
                   color: 'var(--text-secondary)',
                   display: 'flex',
                   alignItems: 'center',
@@ -1116,6 +1392,10 @@ const HealthStory = () => {
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.8; }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
       `}</style>
     </div>

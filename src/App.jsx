@@ -23,6 +23,7 @@ import PopulationIntelligence from './pages/PopulationIntelligence'
 import HospitalConnector from './pages/HospitalConnector'
 import PredictiveTimeline from './pages/PredictiveTimeline'
 import AdvancedDetection from './pages/AdvancedDetection'
+import OutbreakDetection from './pages/OutbreakDetection'
 
 function App() {
   return (
@@ -67,6 +68,7 @@ function App() {
           <Route path="/health-story/:patientId" element={<HealthStory />} />
           <Route path="/what-if/:patientId" element={<WhatIfSimulator />} />
           <Route path="/population-intelligence" element={<PopulationIntelligence />} />
+          <Route path="/outbreak-detection" element={<OutbreakDetection />} />
           <Route path="/hospitals/:patientId" element={<HospitalConnector />} />
           <Route path="/predictive-timeline/:patientId" element={<PredictiveTimeline />} />
 

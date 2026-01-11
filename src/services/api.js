@@ -161,6 +161,7 @@ export const digitalTwinAPI = {
 // Health Story API
 export const healthStoryAPI = {
   getByPatient: (patientId) => api.get(`/health-story/patient/${patientId}`),
+  askQuestion: (patientId, question) => api.post(`/health-story/patient/${patientId}/ask`, { question }),
 }
 
 // What-If Simulator API
@@ -202,6 +203,11 @@ export const predictiveTimelineAPI = {
     api.post(`/predictive-timeline/patient/${patientId}/what-if`, scenarioInputs),
   getInterventions: () =>
     api.get('/predictive-timeline/interventions'),
+}
+
+// SOS Emergency API - Silent Guardian Fall Detection
+export const sosAPI = {
+  triggerEmergency: (sosRequest) => api.post('/sos', sosRequest),
 }
 
 // Advanced AI Detection API (FastAPI Server)
