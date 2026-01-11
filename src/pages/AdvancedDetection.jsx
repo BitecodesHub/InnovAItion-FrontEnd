@@ -29,11 +29,11 @@ const DETECTION_TYPES = {
     retinal: {
         id: 'retinal',
         name: 'Retinal Disease Detection',
-        shortName: 'Retinal Scan',
+        shortName: 'Iris Scan',
         icon: Eye,
         color: '#00d4ff',
         gradient: 'linear-gradient(135deg, #00d4ff, #0099cc)',
-        description: 'AI-powered analysis of eye fundus images to detect various retinal conditions',
+        description: 'AI-powered analysis of eye fundus images to detect various medical conditions',
         fileType: 'image',
         acceptedFormats: 'image/jpeg, image/png, image/jpg',
         maxSize: '10MB',

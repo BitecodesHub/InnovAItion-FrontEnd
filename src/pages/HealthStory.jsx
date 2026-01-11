@@ -1297,15 +1297,34 @@ const HealthStory = () => {
                             )}
 
                             {parsed.diseaseStage && (
-                              <div style={{ background: '#eff6ff', padding: '1rem', borderRadius: '8px', border: '1px solid #dbeafe' }}>
-                                <h4 style={{ color: '#1e40af', margin: '0 0 0.5rem 0' }}>Disease Stage: {parsed.diseaseStage.stage}</h4>
+                              <div
+                                style={{
+                                  background: '#eff6ff',
+                                  padding: '1rem',
+                                  borderRadius: '8px',
+                                  border: '1px solid #dbeafe',
+                                  color: '#000' // 👈 force black text
+                                }}
+                              >
+                                <h4
+                                  style={{
+                                    margin: '0 0 0.5rem 0',
+                                    color: '#000' // 👈 ensure heading is black
+                                  }}
+                                >
+                                  Disease Stage: {parsed.diseaseStage.stage}
+                                </h4>
+
                                 <ul style={{ margin: 0, paddingLeft: '1.2rem' }}>
                                   {parsed.diseaseStage.explanation?.map((point, i) => (
-                                    <li key={i} style={{ marginBottom: '0.25rem' }}>{point}</li>
+                                    <li key={i} style={{ marginBottom: '0.25rem', color: '#000' }}>
+                                      {point}
+                                    </li>
                                   ))}
                                 </ul>
                               </div>
                             )}
+
 
                             {parsed.finalAINote && (
                               <p style={{
