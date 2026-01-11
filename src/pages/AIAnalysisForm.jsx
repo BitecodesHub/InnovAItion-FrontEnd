@@ -445,7 +445,7 @@ const AIAnalysisForm = () => {
                           disabled={isRequired && isSelected}
                         />
                         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <span style={{ fontSize: '0.875rem', flex: 1 }}>
+                          <span style={{ fontSize: '0.875rem', flex: 1, color: '#000000' }}>
                             {record.title} - {record.recordType}
                           </span>
                           {isRequired && (
